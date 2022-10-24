@@ -3,7 +3,7 @@ package diccionario
 type abb[K comparable, V any] struct {
 	raiz     *nodoAbb[K, V]
 	cantidad int
-	cmp      funcCmp[K]
+	cmp      func(K, K) int
 }
 
 type nodoAbb[K comparable, V any] struct {
@@ -13,7 +13,7 @@ type nodoAbb[K comparable, V any] struct {
 	dato      V
 }
 
-func CrearABB[K comparable, V any](funcion_cmp func(K, K) int) DiccinarioOrdenado[K, V] {
+func CrearABB[K comparable, V any](funcion_cmp func(K, K) int) DiccionarioOrdenado[K, V] {
 	arbol := new(abb[K, V])
 	arbol.cmp = funcion_cmp
 	return arbol
@@ -24,7 +24,6 @@ func crearNodo[K comparable, V any](clave K, valor V) *nodoAbb[K, V] {
 	nodo.clave = clave
 	nodo.dato = valor
 	return nodo
-
 }
 
 func (abb *abb[K, V]) Guardar(clave K, valor V) {
@@ -99,6 +98,12 @@ func (abb abb[K, V]) buscarPadre(nodo *nodoAbb[K, V], raiz *nodoAbb[K, V]) *nodo
 	}
 	return busc
 }
+func (abb abb[K, V]) buscarMayor(nodo *nodoAbb[K, V]) *nodoAbb[K, V] {
+	if nodo.derecho == nil {
+		return nodo
+	}
+	return abb.buscarMayor(nodo.derecho)
+}
 
 func (abb *abb[K, V]) Borrar(clave K) V {
 	if !abb.Pertenece(clave) {
@@ -106,28 +111,56 @@ func (abb *abb[K, V]) Borrar(clave K) V {
 	}
 	nodo := abb.buscar(clave, abb.raiz)
 	clave_retornar := nodo.dato
-	//no tiene hijos, padre apunta a nil
+
 	if nodo.izquierdo == nil && nodo.derecho == nil {
-		nodo = nil
-	} else if nodo.izquierdo == nil || nodo.derecho == nil { //un hijo, abuelo apunta al nieto
+		padre := abb.buscarPadre(nodo, abb.raiz)
+		if padre == nil {
+			abb.raiz = nil
+		} else {
+			if abb.cmp(padre.clave, nodo.clave) > 0 {
+				padre.izquierdo = nil
+			} else {
+				padre.derecho = nil
+			}
+		}
+
+		abb.cantidad--
+		return clave_retornar
+	}
+
+	if nodo.izquierdo == nil || nodo.derecho == nil { //un hijo, abuelo apunta al nieto
 		padre := abb.buscarPadre(nodo, abb.raiz)
 		var enlace **nodoAbb[K, V]
 
-		//ya que busque el padre pongo los if para saber de que lado del padre estaba el hijo
-		if abb.cmp(padre.clave, nodo.clave) > 0 {
-			enlace = &padre.izquierdo
+		if padre == nil {
+			if nodo.izquierdo != nil {
+				abb.raiz = nodo.izquierdo
+			} else {
+				abb.raiz = nodo.derecho
+			}
 		} else {
-			enlace = &padre.derecho
-		}
-		//asigno el nieto
-		if nodo.izquierdo != nil {
-			*enlace = nodo.izquierdo
-		} else {
-			*enlace = nodo.derecho
-		}
+			if abb.cmp(padre.clave, nodo.clave) > 0 {
+				enlace = &padre.izquierdo
+			} else {
+				enlace = &padre.derecho
+			}
 
+			if nodo.izquierdo != nil {
+				*enlace = nodo.izquierdo
+			} else {
+				*enlace = nodo.derecho
+			}
+		}
+		abb.cantidad--
 	}
-	//dos hijos, se reemplaza por el mas chico de la derecha o el mayor de la izquierda
-	abb.cantidad--
+	if nodo.izquierdo != nil && nodo.derecho != nil {
+		reemplazo := abb.buscarMayor(nodo.izquierdo)
+		reemplazo_dato, reemplazo_clave := reemplazo.dato, reemplazo.clave
+
+		abb.Borrar(reemplazo.clave)
+
+		nodo.clave, nodo.dato = reemplazo_clave, reemplazo_dato
+	}
+
 	return clave_retornar
 }
