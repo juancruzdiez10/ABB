@@ -82,18 +82,22 @@ func (abb abb[K, V]) buscar(clave K, raiz *nodoAbb[K, V]) *nodoAbb[K, V] {
 }
 
 func (abb abb[K, V]) buscarPadre(nodo *nodoAbb[K, V], raiz *nodoAbb[K, V]) *nodoAbb[K, V] {
-	if nodo.clave == raiz.clave {
+	if abb.cmp(raiz.clave, nodo.clave) == 0 {
 		return nil
 	}
+	var busc *nodoAbb[K, V]
 	if abb.cmp(raiz.clave, nodo.clave) > 0 {
-		if raiz.izquierdo == nil {
-
+		busc = abb.buscarPadre(nodo, raiz.izquierdo)
+		if busc == nil {
+			return raiz
+		}
+	} else {
+		busc = abb.buscarPadre(nodo, raiz.derecho)
+		if busc == nil {
+			return raiz
 		}
 	}
-	if raiz.izquierdo.clave == nodo.clave || raiz.derecho.clave == nodo.clave {
-		return raiz
-	}
-
+	return busc
 }
 
 func (abb *abb[K, V]) Borrar(clave K) V {
@@ -101,12 +105,29 @@ func (abb *abb[K, V]) Borrar(clave K) V {
 		panic("La clave no pertenece al diccionario")
 	}
 	nodo := abb.buscar(clave, abb.raiz)
+	clave_retornar := nodo.dato
 	//no tiene hijos, padre apunta a nil
 	if nodo.izquierdo == nil && nodo.derecho == nil {
 		nodo = nil
+	} else if nodo.izquierdo == nil || nodo.derecho == nil { //un hijo, abuelo apunta al nieto
+		padre := abb.buscarPadre(nodo, abb.raiz)
+		var enlace **nodoAbb[K, V]
+
+		//ya que busque el padre pongo los if para saber de que lado del padre estaba el hijo
+		if abb.cmp(padre.clave, nodo.clave) > 0 {
+			enlace = &padre.izquierdo
+		} else {
+			enlace = &padre.derecho
+		}
+		//asigno el nieto
+		if nodo.izquierdo != nil {
+			*enlace = nodo.izquierdo
+		} else {
+			*enlace = nodo.derecho
+		}
+
 	}
-	//un hijo, abuelo apunta al nieto
-
 	//dos hijos, se reemplaza por el mas chico de la derecha o el mayor de la izquierda
-
+	abb.cantidad--
+	return clave_retornar
 }
