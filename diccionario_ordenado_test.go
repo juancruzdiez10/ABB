@@ -357,7 +357,7 @@ func TestIteradorInternoClaves(t *testing.T) {
 	cantidad := 0
 	cantPtr := &cantidad
 
-	dic.Iterar(nodoAbb[K, V], func(clave string, dato *int) bool {
+	dic.Iterar(func(clave string, dato *int) bool {
 		cs[cantidad] = clave
 		*cantPtr = *cantPtr + 1
 		return true
