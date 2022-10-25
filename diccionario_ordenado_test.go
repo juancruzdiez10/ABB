@@ -341,3 +341,59 @@ func TestPruebaIterarTrasBorrados(t *testing.T) {
 	require.EqualValues(t, clave1, iter.Siguiente())
 	require.False(t, iter.HaySiguiente())
 }
+
+func TestIteradorInternoClaves(t *testing.T) {
+	t.Log("Valida que todas las claves sean recorridas (y una única vez) con el iterador interno")
+	clave1 := "Gato"
+	clave2 := "Perro"
+	clave3 := "Vaca"
+	claves := []string{clave1, clave2, clave3}
+	dic := TDADiccionario.CrearABB[string, *int](func(a, b string) int { return strings.Compare(a, b) })
+	dic.Guardar(claves[0], nil)
+	dic.Guardar(claves[1], nil)
+	dic.Guardar(claves[2], nil)
+
+	cs := []string{"", "", ""}
+	cantidad := 0
+	cantPtr := &cantidad
+
+	dic.Iterar(nodoAbb[K, V], func(clave string, dato *int) bool {
+		cs[cantidad] = clave
+		*cantPtr = *cantPtr + 1
+		return true
+	})
+
+	require.EqualValues(t, 3, cantidad)
+
+	require.NotEqualValues(t, -1, buscar(cs[0], claves))
+	require.NotEqualValues(t, -1, buscar(cs[1], claves))
+	require.NotEqualValues(t, -1, buscar(cs[2], claves))
+	require.NotEqualValues(t, cs[0], cs[1])
+	require.NotEqualValues(t, cs[0], cs[2])
+	require.NotEqualValues(t, cs[2], cs[1])
+}
+
+func TestIteradorInternoValores(t *testing.T) {
+	t.Log("Valida que los datos sean recorridas correctamente (y una única vez) con el iterador interno")
+	clave1 := "Gato"
+	clave2 := "Perro"
+	clave3 := "Vaca"
+	clave4 := "Burrito"
+	clave5 := "Hamster"
+
+	dic := TDADiccionario.CrearABB[string, int](func(a, b string) int { return strings.Compare(a, b) })
+	dic.Guardar(clave1, 6)
+	dic.Guardar(clave2, 2)
+	dic.Guardar(clave3, 3)
+	dic.Guardar(clave4, 4)
+	dic.Guardar(clave5, 5)
+
+	factorial := 1
+	ptrFactorial := &factorial
+	dic.Iterar(func(_ string, dato int) bool {
+		*ptrFactorial *= dato
+		return true
+	})
+
+	require.EqualValues(t, 720, factorial)
+}

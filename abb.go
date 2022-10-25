@@ -192,3 +192,14 @@ func (iter iterAbb[K, V]) VerActual() (K, V) {
 	elemento := iter.pila.VerTope()
 	return elemento.clave, elemento.dato
 }
+
+func (nodo *nodoAbb[K, V]) iterar(visitar func(K, V) bool) {
+	//recorrido in orden
+	if nodo == nil {
+		return
+	}
+
+	nodo.izquierdo.iterar(visitar)
+	visitar(nodo.clave, nodo.dato)
+	nodo.derecho.iterar(visitar)
+}
