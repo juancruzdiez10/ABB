@@ -1,5 +1,9 @@
 package diccionario
 
+import (
+	TDAPila "abb/pila"
+)
+
 type abb[K comparable, V any] struct {
 	raiz     *nodoAbb[K, V]
 	cantidad int
@@ -11,6 +15,11 @@ type nodoAbb[K comparable, V any] struct {
 	derecho   *nodoAbb[K, V]
 	clave     K
 	dato      V
+}
+
+type iterAbb[K comparable, V any] struct {
+	actual *nodoAbb[K, V]
+	pila   TDAPila.Pila[*nodoAbb[K, V]]
 }
 
 func CrearABB[K comparable, V any](funcion_cmp func(K, K) int) DiccionarioOrdenado[K, V] {
@@ -70,23 +79,22 @@ func (abb abb[K, V]) buscar(clave K, raiz *nodoAbb[K, V]) (*nodoAbb[K, V], *nodo
 	if abb.cmp(raiz.clave, clave) == 0 {
 		return raiz, nil
 	}
-
-	var busc, padre *nodoAbb[K, V]
+	var nodo, padre *nodoAbb[K, V]
 	if abb.cmp(raiz.clave, clave) > 0 {
 		if raiz.izquierdo == nil {
 			return raiz, raiz
 		}
-		busc, padre = abb.buscar(clave, raiz.izquierdo)
+		nodo, padre = abb.buscar(clave, raiz.izquierdo)
 	} else {
 		if raiz.derecho == nil {
 			return raiz, raiz
 		}
-		busc, padre = abb.buscar(clave, raiz.derecho)
+		nodo, padre = abb.buscar(clave, raiz.derecho)
 	}
 	if padre == nil {
 		padre = raiz
 	}
-	return busc, padre
+	return nodo, padre
 }
 
 func (abb abb[K, V]) buscarMayor(nodo *nodoAbb[K, V]) *nodoAbb[K, V] {
@@ -102,55 +110,85 @@ func (abb *abb[K, V]) Borrar(clave K) V {
 	}
 	nodo, padre := abb.buscar(clave, abb.raiz)
 	clave_retornar := nodo.dato
-
-	if nodo.izquierdo == nil && nodo.derecho == nil {
-
-		if padre == nil {
-			abb.raiz = nil
-		} else {
-			if abb.cmp(padre.clave, nodo.clave) > 0 {
-				padre.izquierdo = nil
-			} else {
-				padre.derecho = nil
-			}
-		}
-
-		abb.cantidad--
-		return clave_retornar
-	}
-
-	if nodo.izquierdo == nil || nodo.derecho == nil { //un hijo, abuelo apunta al nieto
-
-		var enlace **nodoAbb[K, V]
-
-		if padre == nil {
-			if nodo.izquierdo != nil {
-				abb.raiz = nodo.izquierdo
-			} else {
-				abb.raiz = nodo.derecho
-			}
-		} else {
-			if abb.cmp(padre.clave, nodo.clave) > 0 {
-				enlace = &padre.izquierdo
-			} else {
-				enlace = &padre.derecho
-			}
-
-			if nodo.izquierdo != nil {
-				*enlace = nodo.izquierdo
-			} else {
-				*enlace = nodo.derecho
-			}
-		}
-		abb.cantidad--
-	}
 	if nodo.izquierdo != nil && nodo.derecho != nil {
+
 		reemplazo := abb.buscarMayor(nodo.izquierdo)
 		reemplazo_dato, reemplazo_clave := reemplazo.dato, reemplazo.clave
-
 		abb.Borrar(reemplazo.clave)
-
 		nodo.clave, nodo.dato = reemplazo_clave, reemplazo_dato
+		return clave_retornar //return aca para no restar la cantidad todavia
+
+	} else if padre == nil {
+
+		if nodo.izquierdo != nil {
+			abb.raiz = nodo.izquierdo
+		} else if nodo.derecho != nil {
+			abb.raiz = nodo.derecho
+		} else {
+			abb.raiz = nil
+		}
+
+	} else if nodo.izquierdo == nil && nodo.derecho == nil {
+
+		if abb.cmp(padre.clave, nodo.clave) > 0 {
+			padre.izquierdo = nil
+		} else {
+			padre.derecho = nil
+		}
+
+	} else if nodo.izquierdo == nil || nodo.derecho == nil { //un hijo, abuelo apunta al nieto
+
+		var enlace **nodoAbb[K, V]
+		if abb.cmp(padre.clave, nodo.clave) > 0 {
+			enlace = &padre.izquierdo
+		} else {
+			enlace = &padre.derecho
+		}
+		if nodo.izquierdo != nil {
+			*enlace = nodo.izquierdo
+		} else {
+			*enlace = nodo.derecho
+		} //Creeria q este seria el unico para modificar, pero no encuentro manera mas corta que esta
+
 	}
+	abb.cantidad--
 	return clave_retornar
+}
+
+func (abb *abb[K, V]) Iterador() IterDiccionario[K, V] {
+	//con recorrido preorder
+	iter := new(iterAbb[K, V])
+	pila := TDAPila.CrearPilaDinamica[*nodoAbb[K, V]]()
+	if abb.raiz != nil {
+		pila.Apilar(abb.raiz)
+		iter.actual = pila.VerTope()
+	}
+	iter.pila = pila
+	return iter
+}
+
+func (iter iterAbb[K, V]) HaySiguiente() bool {
+	return !iter.pila.EstaVacia()
+}
+
+func (iter *iterAbb[K, V]) Siguiente() K {
+	if !iter.HaySiguiente() {
+		panic("El iterador termino de iterar")
+	}
+	elemento := iter.pila.Desapilar()
+	if elemento.derecho != nil {
+		iter.pila.Apilar(elemento.derecho)
+	}
+	if elemento.izquierdo != nil {
+		iter.pila.Apilar(elemento.izquierdo)
+	}
+	return elemento.clave
+}
+
+func (iter iterAbb[K, V]) VerActual() (K, V) {
+	if !iter.HaySiguiente() {
+		panic("El iterador termino de iterar")
+	}
+	elemento := iter.pila.VerTope()
+	return elemento.clave, elemento.dato
 }
