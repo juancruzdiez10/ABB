@@ -166,9 +166,8 @@ func (nodo *nodoAbb[K, V]) iterar(visitar func(K, V) bool) {
 		return
 	}
 	nodo.izquierdo.iterar(visitar)
-	if visitar(nodo.clave, nodo.dato) {
-		nodo.derecho.iterar(visitar)
-	}
+	visitar(nodo.clave, nodo.dato)
+	nodo.derecho.iterar(visitar)
 }
 
 func (iter *iterAbb[K, V]) apilarHijos(nodo *nodoAbb[K, V], desde *K) {
@@ -254,6 +253,7 @@ func (abb abb[K, V]) IterarRango(desde *K, hasta *K, visitar func(K, V) bool) {
 }
 
 func (nodo *nodoAbb[K, V]) iterarRango(desde *K, hasta *K, visitar func(K, V) bool, cmp func(K, K) int) {
+
 	if nodo == nil || cmp(*desde, *hasta) > 0 {
 		return
 	}

@@ -3,6 +3,7 @@ package diccionario_test
 import (
 	TDADiccionario "abb"
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -170,14 +171,14 @@ func TestBorrarYGuardar(t *testing.T) {
 }
 
 func ejecutarPruebaVolumen(b *testing.B, n int) {
-	dic := TDADiccionario.CrearABB[string, int](func(a, b string) int { return strings.Compare(a, b) })
-	claves := make([]string, n)
+	dic := TDADiccionario.CrearABB[int, int](func(a, b int) int { return a - b })
+	claves := make([]int, n)
 	valores := make([]int, n)
 
 	// Inserta 'n' parejas en el hash
 	for i := 0; i < n; i++ {
-		valores[i] = i
-		claves[i] = fmt.Sprintf("%08d", i)
+		valores[i] = rand.Intn(500000000000)
+		claves[i] = valores[i]
 		dic.Guardar(claves[i], valores[i])
 	}
 
@@ -211,8 +212,10 @@ func ejecutarPruebaVolumen(b *testing.B, n int) {
 	require.EqualValues(b, 0, dic.Cantidad())
 }
 
-//hacerlo aleatorio
-/*func BenchmarkDiccionario(b *testing.B) {
+var TAMS_VOLUMEN = []int{1000, 3000, 5000}
+
+// hacerlo aleatorio
+func BenchmarkDiccionario(b *testing.B) {
 	for _, n := range TAMS_VOLUMEN {
 		b.Run(fmt.Sprintf("Prueba %d elementos", n), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
@@ -220,7 +223,7 @@ func ejecutarPruebaVolumen(b *testing.B, n int) {
 			}
 		})
 	}
-}*/
+}
 
 func buscar(clave string, claves []string) int {
 	for i, c := range claves {
@@ -396,4 +399,111 @@ func TestIteradorInternoValores(t *testing.T) {
 	})
 
 	require.EqualValues(t, 720, factorial)
+}
+
+func TestIteradorInternoRango(t *testing.T) {
+	dic := TDADiccionario.CrearABB[int, int](func(a, b int) int { return a - b })
+	dic.Guardar(10, 10)
+	dic.Guardar(5, 5)
+	dic.Guardar(15, 15)
+	dic.Guardar(12, 12)
+	dic.Guardar(17, 17)
+	dic.Guardar(3, 3)
+	dic.Guardar(7, 7)
+	clave1 := 6
+	clave2 := 15
+
+	sumador := 0
+	ptrSumador := &sumador
+	dic.IterarRango(&clave1, &clave2, func(clave int, dato int) bool {
+
+		*ptrSumador += dato
+		return true
+	})
+
+	require.EqualValues(t, 44, sumador)
+}
+
+func TestInternoStringsRango(t *testing.T) {
+	dic := TDADiccionario.CrearABB[string, int](func(a, b string) int { return strings.Compare(a, b) })
+
+	dic.Guardar("perro", 2)
+	dic.Guardar("ballena", 5)
+	dic.Guardar("gato", 7)
+	dic.Guardar("yegua", 7)
+	dic.Guardar("sapo", 3)
+	dic.Guardar("foca", 8)
+	dic.Guardar("colibri", 15)
+	clave1 := "colibri"
+	clave2 := "vaca"
+
+	multiplicador := 1
+	ptrMult := &multiplicador
+
+	dic.IterarRango(&clave1, &clave2, func(clave string, dato int) bool {
+		if *ptrMult > 100 {
+			return false
+		}
+		*ptrMult *= dato
+		return true
+	})
+
+	require.EqualValues(t, 120, multiplicador)
+
+}
+
+func TestInternoStrings(t *testing.T) {
+	dic := TDADiccionario.CrearABB[string, int](func(a, b string) int { return strings.Compare(a, b) })
+
+	dic.Guardar("perro", 2)
+	dic.Guardar("ballena", 5)
+	dic.Guardar("gato", 7)
+	dic.Guardar("yegua", 7)
+	dic.Guardar("sapo", 3)
+	dic.Guardar("foca", 8)
+	dic.Guardar("colibri", 15)
+
+	multiplicador := 1
+	ptrMult := &multiplicador
+
+	dic.Iterar(func(clave string, dato int) bool {
+		if *ptrMult > 100 {
+			return false
+		}
+		*ptrMult *= dato
+		return true
+	})
+
+	require.EqualValues(t, 600, multiplicador)
+}
+
+func TestInternoRangoInt(t *testing.T) {
+	dic := TDADiccionario.CrearABB[int, int](func(a, b int) int { return a - b })
+
+	dic.Guardar(5, 5)
+	dic.Guardar(3, 3)
+	dic.Guardar(7, 7)
+	dic.Guardar(4, 4)
+	dic.Guardar(2, 2)
+	dic.Guardar(6, 6)
+	dic.Guardar(8, 8)
+	clave1 := 5
+	clave2 := 99
+
+	contador := 0
+	multiplicador := 1
+	ptrMult := &multiplicador
+	ptrCont := &contador
+	dic.IterarRango(&clave1, &clave2, func(clave int, valor int) bool {
+		if *ptrCont >= 3 {
+			return false
+		}
+		*ptrCont++
+		*ptrMult *= clave
+		return true
+
+	})
+
+	require.EqualValues(t, 210, multiplicador)
+	require.EqualValues(t, 3, contador)
 }
