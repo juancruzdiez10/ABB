@@ -173,6 +173,7 @@ func (iter *iterAbb[K, V]) apilarHijos(nodo *nodoAbb[K, V], desde *K) {
 	if nodo == nil {
 		return
 	}
+
 	iter.pila.Apilar(nodo)
 	if iter.desde == nil {
 		iter.apilarHijos(nodo.izquierdo, desde)
@@ -183,6 +184,7 @@ func (iter *iterAbb[K, V]) apilarHijos(nodo *nodoAbb[K, V], desde *K) {
 			iter.apilarHijos(nodo.izquierdo, desde)
 		}
 	}
+
 }
 
 func (abb abb[K, V]) Iterador() IterDiccionario[K, V] {
@@ -238,6 +240,8 @@ func (abb abb[K, V]) IteradorRango(desde *K, hasta *K) IterDiccionario[K, V] {
 	iter.pila = TDAPila.CrearPilaDinamica[*nodoAbb[K, V]]()
 	iter.desde = desde
 	iter.hasta = hasta
+	iter.cmp = abb.cmp
+
 	if abb.cmp(*desde, *hasta) > 0 {
 		return iter
 	}
