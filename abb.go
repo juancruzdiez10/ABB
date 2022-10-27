@@ -161,7 +161,6 @@ func (abb abb[K, V]) Iterar(visitar func(K, V) bool) {
 }
 
 func (nodo *nodoAbb[K, V]) iterar(visitar func(K, V) bool) {
-	//recorrido in orden
 	if nodo == nil {
 		return
 	}
@@ -187,7 +186,6 @@ func (iter *iterAbb[K, V]) apilarHijos(nodo *nodoAbb[K, V], desde *K) {
 }
 
 func (abb abb[K, V]) Iterador() IterDiccionario[K, V] {
-	//con recorrido preorder
 	iter := new(iterAbb[K, V])
 	iter.pila = TDAPila.CrearPilaDinamica[*nodoAbb[K, V]]()
 	iter.cmp = abb.cmp
