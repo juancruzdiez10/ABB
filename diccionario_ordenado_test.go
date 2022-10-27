@@ -259,7 +259,6 @@ func TestDiccionarioIterar(t *testing.T) {
 
 	require.True(t, iter.HaySiguiente())
 	tercero, _ := iter.VerActual()
-	fmt.Println(tercero)
 	require.NotEqualValues(t, -1, buscar(tercero, claves))
 	require.NotEqualValues(t, primero, tercero)
 	require.NotEqualValues(t, segundo, tercero)
@@ -415,14 +414,11 @@ func TestIteradorRango(t *testing.T) {
 	clave1 := "delfin"
 	clave2 := "vaca"
 
-	fmt.Println("aca")
 	iter := dic.IteradorRango(&clave1, &clave2)
-	fmt.Println("salio")
 
 	require.True(t, iter.HaySiguiente())
 	require.EqualValues(t, "foca", iter.Siguiente())
 	require.EqualValues(t, "gato", iter.Siguiente())
-	fmt.Println("aca")
 	require.EqualValues(t, "perro", iter.Siguiente())
 	require.True(t, iter.HaySiguiente())
 	require.EqualValues(t, "sapo", iter.Siguiente())
