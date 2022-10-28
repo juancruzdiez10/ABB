@@ -1,7 +1,7 @@
 package diccionario_test
 
 import (
-	TDADiccionario "abb"
+	TDADiccionario "diccionario"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var TAMS_VOLUMEN = []int{100000, 300000, 500000}
+var TAMS_VOLUMEN = []int{10000, 30000, 50000}
 
 func TestDiccionarioVacio(t *testing.T) {
 	dic := TDADiccionario.CrearABB[int, int](func(a, b int) int { return a - b })
@@ -501,6 +501,25 @@ func TestInternoRangoInt(t *testing.T) {
 	require.EqualValues(t, 3, contador)
 }
 
+func TestSinDesdeNiHasta(t *testing.T) {
+	dic := TDADiccionario.CrearABB[int, int](func(a, b int) int { return a - b })
+	dic.Guardar(5, 5)
+	dic.Guardar(3, 3)
+	dic.Guardar(7, 7)
+	dic.Guardar(2, 2)
+	dic.Guardar(4, 4)
+	dic.Guardar(6, 6)
+	dic.Guardar(8, 8)
+
+	iter := dic.IteradorRango(nil, nil)
+	i := 2
+	for iter.HaySiguiente() {
+		require.EqualValues(t, i, iter.Siguiente())
+		i++
+	}
+	require.False(t, iter.HaySiguiente())
+}
+
 func TestExternoRangoVariosElementos(t *testing.T) {
 	dic := TDADiccionario.CrearABB[int, int](func(a, b int) int { return a - b })
 	dic.Guardar(77, 7)
@@ -595,9 +614,6 @@ func ejecutarPruebasVolumenIterador(b *testing.B, n int) {
 }
 
 func BenchmarkIterador(b *testing.B) {
-	b.Log("Prueba de stress del Iterador del Diccionario. Prueba guardando distinta cantidad de elementos " +
-		"(muy grandes) b.N elementos, iterarlos todos sin problemas. Se ejecuta cada prueba b.N veces para generar " +
-		"un benchmark")
 	for _, n := range TAMS_VOLUMEN {
 		b.Run(fmt.Sprintf("Prueba %d elementos", n), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
