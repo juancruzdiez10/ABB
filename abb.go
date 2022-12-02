@@ -1,7 +1,8 @@
 package diccionario
 
 import (
-	TDAPila "diccionario/pila"
+	TDALista "ABB/Lista-enlazada"
+	TDAPila "ABB/pila"
 )
 
 type abb[K comparable, V any] struct {
@@ -292,3 +293,165 @@ func (nodo *nodoAbb[K, V]) iterarRango(desde *K, hasta *K, visitar func(K, V) bo
 		nodo.derecho.iterarRango(desde, hasta, visitar, cmp)
 	}
 }
+
+func (ab abb[K, V]) EsCompleto() bool {
+	return ab.raiz.EsCompletoAux()
+}
+
+func (ab *nodoAbb[K, V]) EsCompletoAux() bool {
+	if ab == nil {
+		return true
+	}
+	ok := false
+	izq := ab.izquierdo.EsCompletoAux()
+	der := ab.derecho.EsCompletoAux()
+	if ab.izquierdo != nil && ab.derecho != nil {
+		if ab.izquierdo.Altura() == ab.derecho.Altura() {
+			ok = true
+		}
+	} else if ab.derecho == nil && ab.izquierdo == nil {
+		ok = true
+	}
+	return ok && izq && der
+}
+
+func (ab *nodoAbb[K, V]) Altura() int {
+	if ab == nil {
+		return 0
+	}
+	return max(ab.izquierdo.Altura(), ab.derecho.Altura()) + 1
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func (ab *abb[K, V]) Mayores(cadena K) TDALista.Lista[K] {
+	lista := TDALista.CrearListaEnlazada[K]()
+	ab.raiz.MayoresAUX(cadena, ab.cmp, lista)
+	return lista
+}
+
+func (ab *nodoAbb[K, V]) MayoresAUX(cadena K, cmp func(K, K) int, lista TDALista.Lista[K]) {
+	if ab == nil {
+		return
+	}
+	if cmp(ab.clave, cadena) > 0 {
+		ab.izquierdo.MayoresAUX(cadena, cmp, lista)
+		lista.InsertarUltimo(ab.clave)
+	}
+	ab.derecho.MayoresAUX(cadena, cmp, lista)
+}
+
+func (ab *abb[K, int]) suma() int {
+	return ab.raiz.sumaAux()
+}
+
+func (ab *nodoAbb[K, int]) sumaAux() int {
+	if ab == nil {
+		return 0
+	}
+	valor1 := ab.izquierdo.sumaAux()
+	valor := ab.dato
+	valor2 := ab.derecho.sumaAux()
+
+	return valor1 + valor2 + valor
+}
+
+func (ab *abb[K, V]) dosHijos() int {
+	return ab.raiz.dosHijosAux()
+}
+
+func (ab *nodoAbb[K, V]) dosHijosAux() int {
+	if ab == nil {
+		return 0
+	}
+	valor := 0
+	if ab.izquierdo != nil && ab.derecho != nil {
+		valor = 1
+	}
+	izq := ab.izquierdo.dosHijosAux()
+	der := ab.derecho.dosHijosAux()
+	return izq + der + valor
+}
+
+func (arbol *abb[K, V]) Invertir() {
+	arbol.raiz.InvertirAUX()
+}
+
+func (arbol *nodoAbb[K, V]) InvertirAUX() {
+	if arbol == nil {
+		return
+	}
+	arbol.izquierdo.InvertirAUX()
+	arbol.derecho.InvertirAUX()
+	*arbol.izquierdo, *arbol.derecho = *arbol.derecho, *arbol.izquierdo
+}
+
+func (ab abb[K, V]) Quiebres() int {
+	return ab.raiz.QuiebresAux()
+}
+
+func (ab *nodoAbb[K, V]) QuiebresAux() int {
+	if ab == nil {
+		return 0
+	}
+	suma := 0
+	if ab.izquierdo != nil && ab.derecho == nil {
+		if ab.izquierdo.izquierdo == nil && ab.izquierdo.derecho != nil {
+			suma++
+		}
+	} else if ab.derecho != nil && ab.izquierdo == nil {
+		if ab.derecho.izquierdo != nil && ab.derecho.derecho == nil {
+			suma++
+		}
+	}
+	izq := ab.izquierdo.QuiebresAux()
+	der := ab.derecho.QuiebresAux()
+
+	return suma + izq + der
+}
+
+func (abb *abb[K, V]) recorrido() TDALista.Lista[K] {
+	lista := TDALista.CrearListaEnlazada[K]()
+	abb.raiz.recorridoAUX(lista)
+	return lista
+}
+
+func (abb *nodoAbb[K, V]) recorridoAUX(lista TDALista.Lista[K]) {
+	if abb == nil {
+		return
+	}
+
+	lista.InsertarUltimo(abb.clave)
+	abb.izquierdo.recorridoAUX(lista)
+	abb.derecho.recorridoAUX(lista)
+}
+
+/*type ab struct {
+	dato string
+	izq  *ab
+	der  *ab
+}
+
+func (ab *ab) armarArbol(pre, in []string) *ab {
+	ab.recursividad(pre, in, ab)
+	return ab
+}
+
+func (ab *ab) recursividad(pre, in []string, nodo *ab) {
+	if len(pre)==0{
+		return
+	} else if len(pre)==1{
+		ab.dato = pre[0]
+		return
+	}
+
+	valor := pre[1]
+	if valor
+
+
+}*/

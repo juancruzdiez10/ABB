@@ -1,7 +1,7 @@
 package diccionario_test
 
 import (
-	TDADiccionario "diccionario"
+	TDADiccionario "ABB"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -621,4 +621,18 @@ func BenchmarkIterador(b *testing.B) {
 			}
 		})
 	}
+}
+
+func arreglo(arr []int) []int {
+	arrDevolver := make([]int, 0)
+	recursiva(arr, arrDevolver)
+	return arrDevolver
+}
+
+func recursiva(arr1 []int, arrDevolver []int) {
+	mitad := len(arr1) / 2
+
+	arrDevolver = append(arrDevolver, arr1[mitad])
+	recursiva(arr1[:mitad], arrDevolver)
+	recursiva(arr1[mitad:], arrDevolver)
 }
